@@ -467,21 +467,16 @@
   setStatus("Script started...");
 
   // Fetch with 5-second timeout using Promise.race
-  function fetchWithTimeout(url, ms=5000) {
+  function fetchWithTimeout(url, ms) {
+    ms = ms || 5000;
     return Promise.race([
       fetch(url),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), ms))
+      new Promise(function(_, reject) { setTimeout(function() { reject(new Error("timeout")); }, ms); })
     ]);
   }
+  setStatus("fetchWithTimeout defined...");
 
-  /* ─────────────────────────────────────────────
-     PASTE YOUR CSV DATA HERE
-     Update nodes_csv and links_csv whenever your
-     data changes, then save and refresh.
-  ───────────────────────────────────────────── */
-  // ── URL parameter support ──────────────────────────────────────────
-  // Use ?nodes=GID&links=GID in the browser URL to switch data sources
-  // Example: index.html?nodes=111111&links=222222
+  setStatus("Defining constants...");
   const BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQlTBuVO46kBAF0mRvNa949LeZT8KjqXdy1KnzkSGMmxp3eDLxO39NWqRyh4zaOOYHDdZoraia5gI7M/pub?single=true&output=csv";
   const DEFAULT_NODES_GID = "234225689";
   const DEFAULT_LINKS_GID = "1077047330";
