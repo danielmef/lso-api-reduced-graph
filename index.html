@@ -456,6 +456,20 @@
   <script>
   (async function() {
 
+  // Fetch with 5-second timeout so hangs fall back immediately
+  async function fetchWithTimeout(url, ms=5000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), ms);
+    try {
+      const r = await fetch(url, { signal: controller.signal });
+      clearTimeout(timer);
+      return r;
+    } catch(e) {
+      clearTimeout(timer);
+      throw e;
+    }
+  }
+
   /* ─────────────────────────────────────────────
      PASTE YOUR CSV DATA HERE
      Update nodes_csv and links_csv whenever your
@@ -474,7 +488,7 @@
   const apiSelect = document.getElementById("api-select");
   let apiConfig = [];
   try {
-    const configResp = await fetch(CONFIG_URL + "&t=" + Date.now());
+    const configResp = await fetchWithTimeout(CONFIG_URL + "&t=" + Date.now());
     if (!configResp.ok) throw new Error("HTTP " + configResp.status);
     const configCsv = await configResp.text();
     apiConfig = d3.csvParse(configCsv).filter(r => r.label && r.nodes_gid && r.links_gid);
@@ -522,7 +536,7 @@
   // Nodes fetched live from Google Sheets
   let nodes_csv, nodes_source = "live";
   try {
-    const resp = await fetch(NODES_URL + "&t=" + Date.now());
+    const resp = await fetchWithTimeout(NODES_URL + "&t=" + Date.now());
     if (!resp.ok) throw new Error("HTTP " + resp.status);
     nodes_csv = await resp.text();
   } catch(e) {
@@ -556,7 +570,7 @@ transunion-sell,Transunion,company,sell,low,,,,yes`;
   // Links fetched live from Google Sheets
   let links_csv, links_source = "live";
   try {
-    const resp = await fetch(LINKS_URL + "&t=" + Date.now());
+    const resp = await fetchWithTimeout(LINKS_URL + "&t=" + Date.now());
     if (!resp.ok) throw new Error("HTTP " + resp.status);
     links_csv = await resp.text();
   } catch(e) {
@@ -1150,7 +1164,7 @@ hub-buy,hub-sell`;
     let formOptions = [];
     try {
       console.log("Fetching form options from:", FORM_URL);
-      const formResp = await fetch(FORM_URL + "&t=" + Date.now());
+      const formResp = await fetchWithTimeout(FORM_URL + "&t=" + Date.now());
       console.log("Form fetch status:", formResp.status, formResp.ok);
       if (!formResp.ok) throw new Error("HTTP " + formResp.status);
       const formCsv = await formResp.text();
