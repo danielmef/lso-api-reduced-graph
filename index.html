@@ -254,11 +254,6 @@
       display: flex; flex-direction: column;
       justify-content: center; align-items: center;
       gap: 16px;
-      transition: opacity .6s ease;
-    }
-    #loading-overlay.hidden {
-      opacity: 0;
-      pointer-events: none;
     }
     #loading-text {
       font-family: 'Barlow Condensed', sans-serif;
@@ -498,11 +493,16 @@
   </div>
 
   <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-  // Safety timeout — synchronous, guaranteed to run even if async IIFE errors
-  setTimeout(function() {
+  // Multiple redundant overlay removal methods
+  function hideOverlay() {
     var ov = document.getElementById("loading-overlay");
-    if (ov) { ov.classList.add("hidden"); setTimeout(function(){ ov.style.display="none"; }, 650); }
-  }, 8000);
+    if (ov) ov.style.display = "none";
+  }
+  setTimeout(hideOverlay, 3000);
+  setTimeout(hideOverlay, 6000);
+  setTimeout(hideOverlay, 10000);
+  window.addEventListener("load", function() { setTimeout(hideOverlay, 1000); });
+  document.addEventListener("DOMContentLoaded", function() { setTimeout(hideOverlay, 2000); });
 
   (async function() {
 
