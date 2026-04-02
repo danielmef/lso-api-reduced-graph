@@ -1114,6 +1114,37 @@ hub-buy,hub-sell`;
         .attr("preserveAspectRatio", "xMidYMid meet");
     });
 
+  // LSO Certified badge — bottom-left corner overlaps circle (7:30 position)
+  nodeSel.filter(d => d.type === "company" && d["lso certified"] && d["lso certified"].toLowerCase() === "yes")
+    .each(function(d) {
+      const grp = d3.select(this);
+      const r   = radius(d);
+      const fs  = 12, lh = 14, pad = 8;
+      const bw  = 56, bh = lh * 2 + pad * 2;
+      // 7:30 position — bottom-left: (-0.65r, 0.65r), badge extends left and down
+      const bx  = -r * 0.65 - bw, by = r * 0.65;
+      grp.append("rect")
+        .attr("x", bx).attr("y", by)
+        .attr("width", bw).attr("height", bh)
+        .attr("rx", 3).attr("ry", 3)
+        .attr("fill", "#1a1a2e")
+        .attr("stroke", col(d).light)
+        .attr("stroke-width", 1.5);
+      ["LSO","Certified"].forEach(function(word, i) {
+        grp.append("text")
+          .attr("x", bx + bw / 2).attr("y", by + pad + lh * (i + 0.5))
+          .attr("text-anchor", "middle")
+          .attr("dominant-baseline", "central")
+          .attr("fill", col(d).light)
+          .attr("font-size", fs + "px")
+          .attr("font-weight", 400)
+          .attr("font-family", "'DM Sans', sans-serif")
+          .attr("letter-spacing", "0.3px")
+          .attr("pointer-events", "none")
+          .text(word);
+      });
+    });
+
   // Staggered fade-in
   nodeSel.transition().duration(600)
     .delay((d, i) => 350 + i * 45)
