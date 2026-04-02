@@ -322,6 +322,26 @@
     #api-select:hover { border-color: rgba(255,255,255,0.35); }
     #api-select option { background: #070F28; color: var(--text); }
 
+    /* Info box */
+    #info-box {
+      position: fixed; top: 50%; left: 20px;
+      transform: translateY(-50%);
+      width: 200px;
+      background: rgba(10,18,40,0.85);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 12px;
+      line-height: 1.7;
+      color: var(--muted);
+      z-index: 10;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+      backdrop-filter: blur(8px);
+      opacity: 0; animation: slideUp .7s ease 1.2s forwards;
+    }
+    #info-box a { color: #7AAEE0; text-decoration: none; }
+    #info-box a:hover { text-decoration: underline; }
+
     /* Graph */
     #graph {
       position: fixed; inset: 0;
@@ -422,6 +442,7 @@
   </div>
 
   <div id="debug-bar"></div>
+  <div id="info-box">This infographic shows the information that we have received from service providers and solution providers regarding their implementation of the most commonly deployed Mplify-standardized LSO APIs. The data is continuously being updated. For more information, please contact <a id="info-email" href="#"></a></div>
   <svg id="graph"></svg>
   <div id="tooltip">
     <div class="tip-name"></div>
@@ -1204,6 +1225,13 @@ hub-buy,hub-sell`;
     lb.addEventListener("click",   () => lb.classList.remove("active"));
     close.addEventListener("click", e => { e.stopPropagation(); lb.classList.remove("active"); });
     document.addEventListener("keydown", e => { if (e.key === "Escape") lb.classList.remove("active"); });
+  })();
+
+  // Set info box email via JS to prevent Cloudflare obfuscation
+  (function() {
+    var u = "info", d = "mplify.net";
+    var a = document.getElementById("info-email");
+    if (a) { a.href = "mailto:" + u + "@" + d; a.textContent = u + "@" + d; }
   })();
 
   })(); // end async IIFE
