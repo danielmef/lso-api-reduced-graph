@@ -1084,6 +1084,36 @@ hub-buy,hub-sell`;
         .text("Provider");
     });
 
+  // Mplify member badge — top-left corner overlaps circle (10:30 position)
+  nodeSel.filter(d => d.type === "company" && d["mplify member"] && d["mplify member"].toLowerCase() === "yes")
+    .each(function(d) {
+      const grp = d3.select(this);
+      const r   = radius(d);
+      const bw  = 44, bh = 22, pad = 3;
+      // Top-left corner overlaps circle at 10:30 position (-0.62r, -0.62r)
+      const bx  = -r * 0.62 - bw, by = -r * 0.62 - bh;
+      // Badge background — Mplify brand dark blue
+      grp.append("rect")
+        .attr("x", bx).attr("y", by)
+        .attr("width", bw).attr("height", bh)
+        .attr("rx", 3).attr("ry", 3)
+        .attr("fill", "#1A2744")
+        .attr("stroke", col(d).light)
+        .attr("stroke-width", 1.5);
+      // Badge label
+      grp.append("text")
+        .attr("x", bx + bw / 2).attr("y", by + bh / 2)
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "central")
+        .attr("fill", "#ffffff")
+        .attr("font-size", "11px")
+        .attr("font-weight", 700)
+        .attr("font-family", "'Barlow Condensed', sans-serif")
+        .attr("letter-spacing", "1px")
+        .attr("pointer-events", "none")
+        .text("MPLIFY");
+    });
+
   // Staggered fade-in
   nodeSel.transition().duration(600)
     .delay((d, i) => 350 + i * 45)
