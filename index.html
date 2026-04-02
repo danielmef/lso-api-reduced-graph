@@ -498,13 +498,13 @@
   </div>
 
   <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-  (async function() {
-
-  // Safety timeout — always hide overlay after 8 seconds regardless of fetch result
-  setTimeout(() => {
-    const ov = document.getElementById("loading-overlay");
-    if (ov) { ov.classList.add("hidden"); setTimeout(() => ov.style.display = "none", 650); }
+  // Safety timeout — synchronous, guaranteed to run even if async IIFE errors
+  setTimeout(function() {
+    var ov = document.getElementById("loading-overlay");
+    if (ov) { ov.classList.add("hidden"); setTimeout(function(){ ov.style.display="none"; }, 650); }
   }, 8000);
+
+  (async function() {
 
   /* ─────────────────────────────────────────────
      PASTE YOUR CSV DATA HERE
