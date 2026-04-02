@@ -446,6 +446,7 @@
   </div>
 
   <div id="info-box">This infographic shows the information that we have received from service providers and solution providers regarding their implementation of the most commonly deployed Mplify-standardized LSO APIs. The data is continuously being updated. For more information, please contact info&#64;mplify&#46;net</div>
+  <div id="status-bar" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(255,255,255,0.95);border:1px solid #3D7BC7;border-radius:8px;padding:12px 20px;font-family:monospace;font-size:12px;color:#1A2744;z-index:999;text-align:center;">Starting...</div>
   <div id="debug-bar"></div>
   <svg id="graph"></svg>
   <div id="tooltip">
@@ -457,6 +458,13 @@
 
   <script>
   (async function() {
+
+  function setStatus(msg) {
+    var el = document.getElementById("status-bar");
+    if (el) el.textContent = msg;
+    console.log("STATUS:", msg);
+  }
+  setStatus("Script started...");
 
   // Fetch with 5-second timeout using Promise.race
   function fetchWithTimeout(url, ms=5000) {
@@ -478,9 +486,11 @@
   const DEFAULT_NODES_GID = "234225689";
   const DEFAULT_LINKS_GID = "1077047330";
   const CONFIG_URL = BASE_URL + "&gid=399938948";
+  setStatus("Fetching menu config...");
   const FORM_URL   = BASE_URL + "&gid=2067951233";
 
   // Fetch config tab and populate dropdown
+  setStatus("Fetching config...");
   const apiSelect = document.getElementById("api-select");
   let apiConfig = [];
   try {
@@ -530,6 +540,7 @@
   debugBar.style.opacity = "1";
 
   // Nodes fetched live from Google Sheets
+  setStatus("Fetching nodes...");
   let nodes_csv, nodes_source = "live";
   try {
     const resp = await fetchWithTimeout(NODES_URL + "&t=" + Date.now());
@@ -564,6 +575,7 @@ transunion-sell,Transunion,company,sell,low,,,,yes`;
   }
 
   // Links fetched live from Google Sheets
+  setStatus("Fetching links...");
   let links_csv, links_source = "live";
   try {
     const resp = await fetchWithTimeout(LINKS_URL + "&t=" + Date.now());
@@ -794,6 +806,7 @@ hub-buy,hub-sell`;
   /* ─────────────────────────────────────────────
      SIMULATION
   ───────────────────────────────────────────── */
+  setStatus("Building graph...");
   const sim = d3.forceSimulation(nodes)
     .force("link", d3.forceLink(links).id(d => d.id)
       .distance(d => d._type === "hub" ? 300 : 200)
@@ -1103,6 +1116,7 @@ hub-buy,hub-sell`;
   nodeSel.transition().duration(600)
     .delay((d, i) => 350 + i * 45)
     .style("opacity", 1);
+  setTimeout(() => { var el = document.getElementById("status-bar"); if(el) el.style.display="none"; }, 1500);
 
 
   /* ─────────────────────────────────────────────
