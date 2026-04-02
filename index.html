@@ -1098,17 +1098,17 @@ hub-buy,hub-sell`;
         .attr("target", "_blank")
         .attr("rel", "noopener")
         .style("cursor", "pointer");
-      // White badge background so dark logo renders clearly
+      // Dark badge background to match logo
       a.append("rect")
         .attr("x", bx).attr("y", by)
         .attr("width", bw).attr("height", bh)
         .attr("rx", 4).attr("ry", 4)
-        .attr("fill", "#ffffff")
+        .attr("fill", "#000000")
         .attr("stroke", col(d).light)
         .attr("stroke-width", 1.5);
       // Mplify logo image
       a.append("image")
-        .attr("href", "https://www.mplify.net/wp-content/themes/base/images/logo.svg")
+        .attr("href", "https://danielmef.github.io/lso-api-reduced-graph/Mplify-logo-navy.png")
         .attr("x", bx + pad).attr("y", by + pad)
         .attr("width", bw - pad * 2).attr("height", bh - pad * 2)
         .attr("preserveAspectRatio", "xMidYMid meet");
