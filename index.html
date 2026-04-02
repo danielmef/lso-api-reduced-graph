@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="cf-2fa-verify" content="none">
+  <!-- cf-email-protection: off -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mplify LSO API Partners - Simplified</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -456,18 +458,12 @@
   <script>
   (async function() {
 
-  // Fetch with 5-second timeout so hangs fall back immediately
-  async function fetchWithTimeout(url, ms=5000) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), ms);
-    try {
-      const r = await fetch(url, { signal: controller.signal });
-      clearTimeout(timer);
-      return r;
-    } catch(e) {
-      clearTimeout(timer);
-      throw e;
-    }
+  // Fetch with 5-second timeout using Promise.race
+  function fetchWithTimeout(url, ms=5000) {
+    return Promise.race([
+      fetch(url),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), ms))
+    ]);
   }
 
   /* ─────────────────────────────────────────────
