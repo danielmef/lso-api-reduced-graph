@@ -403,8 +403,7 @@
       <table class="impl-table" id="impl-table">
         <thead>
           <tr>
-            <th class="api-name">LSO API</th>
-            <th>Version</th>
+            <th class="api-name">API / Product Version</th>
             <th style="text-align:center">Buy Side</th>
             <th style="text-align:center">Sell Side</th>
           </tr>
@@ -1114,40 +1113,36 @@ hub-buy,hub-sell`;
   }
 
   // ── Implementation Survey ────────────────────────────────────────────────
-  (function() {
-    // REPLACE THIS with your deployed Google Apps Script Web App URL
+  (async function() {
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxG0hoPlzmHYha6Sdoqka8TZKvJhwTQuVYglEhLWa0QathRTTauIksKSRKHOZbLFOAN_w/exec";
+    const FORM_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQlTBuVO46kBAF0mRvNa949LeZT8KjqXdy1KnzkSGMmxp3eDLxO39NWqRyh4zaOOYHDdZoraia5gI7M/pub?gid=2067951233&single=true&output=csv";
 
-    // LSO API list with versions (from LSO Versions & Releases table)
-    const apis = [
-      { name: "Geographic Address",            versions: ["6.0.0-RC","7.0.0-RC","7.0.1"] },
-      { name: "Geographic Site",               versions: ["6.0.0-RC","7.0.0-RC","7.0.1"] },
-      { name: "Product Catalog",               versions: ["1.0.0-RC","2.0.0-RC","3.0.0-RC","4.0.1"] },
-      { name: "Product Offering Qualification",versions: ["6.0.0-RC","7.0.0-RC","7.0.1","8.0.0-RC","8.0.0"] },
-      { name: "Quote",                         versions: ["6.0.0-RC","7.0.0-RC","8.0.0","8.0.1","9.0.0-RC","10.0.0"] },
-      { name: "Product Offering Availability", versions: ["1.0.0-RC","2.0.0-RC","3.0.0-RC","4.0.0-RC","4.0.0"] },
-      { name: "Pricing Discovery",             versions: ["1.0.0-RC","2.0.0-RC","3.0.0-RC","4.0.0-RC","4.0.0"] },
-      { name: "Product Order",                 versions: ["6.0.0-RC","7.0.0-RC","8.0.0-RC","9.0.0-RC","10.0.0","11.0.0-RC","11.0.1"] },
-      { name: "Product Inventory",             versions: ["6.0.0-RC","7.0.0-RC","7.0.1","7.0.2","8.0.0-RC","8.0.0"] },
-      { name: "Trouble Ticket",                versions: ["1.0.0-RC","2.0.0-RC","3.0.0-RC","4.0.0","5.0.0-RC","5.0.0"] },
-      { name: "Appointment",                   versions: ["1.0.0-RC","2.0.0","3.0.0-RC","3.0.1"] },
-      { name: "Work Order",                    versions: ["1.0.0-RC","2.0.0","3.0.0-RC","3.0.0"] },
-      { name: "Billing",                       versions: ["1.0.0-RC","2.0.0","3.0.0-RC","3.0.1"] },
-      { name: "Circuit Impairment & Maintenance", versions: ["1.0.0-RC","1.0.0"] },
-    ];
-
-    // Build table rows
+    // Fetch form options from sheet, fallback to menu options
     const tbody = document.getElementById("impl-tbody");
-    apis.forEach(api => {
-      api.versions.forEach((ver, i) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td class="api-name">${i === 0 ? api.name : ""}</td>
-          <td>${ver}</td>
-          <td class="ver-cell"><input type="checkbox" data-api="${api.name}" data-ver="${ver}" data-side="buy" /></td>
-          <td class="ver-cell"><input type="checkbox" data-api="${api.name}" data-ver="${ver}" data-side="sell" /></td>`;
-        tbody.appendChild(tr);
-      });
+    let formLabels = [];
+    try {
+      const resp = await fetch(FORM_URL + "&t=" + Date.now());
+      if (!resp.ok) throw new Error("HTTP " + resp.status);
+      const csv = await resp.text();
+      formLabels = d3.csvParse(csv).filter(r => r.label).map(r => r.label);
+    } catch(e) {
+      console.warn("Form fetch failed, using fallback:", e);
+      formLabels = [
+        "Address Validation & Site Query (v7.0.0-RC/v7.0.1)",
+        "Product Offering Qualification  (v7.0.0-RC/v7.0.1)",
+        "Quote (v8.0.1)",
+        "Product Order (v10.0.0)"
+      ];
+    }
+
+    // Build table rows — one row per label, with Buy/Sell checkboxes
+    formLabels.forEach(label => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="api-name">${label}</td>
+        <td class="ver-cell"><input type="checkbox" data-api="${label}" data-ver="${label}" data-side="buy" /></td>
+        <td class="ver-cell"><input type="checkbox" data-api="${label}" data-ver="${label}" data-side="sell" /></td>`;
+      tbody.appendChild(tr);
     });
 
     // Drawer open/close
