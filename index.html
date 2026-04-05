@@ -642,6 +642,11 @@ transunion-sell,hub-sell
 hub-buy,hub-sell`;
   }
 
+  // Read title and subtitle from menu config for selected API
+  const selectedApi  = apiConfig.find(r => r.links_gid === linksGid);
+  const apiMainTitle = selectedApi && selectedApi["main title"] ? selectedApi["main title"] : null;
+  const apiSubtitle  = selectedApi && selectedApi["subtitle"]   ? selectedApi["subtitle"]  : null;
+
   // Update debug bar with source info
   debugBar.textContent = `links gid: ${linksGid} [${links_source}] | nodes [${nodes_source}]`;
 
@@ -687,11 +692,15 @@ hub-buy,hub-sell`;
   // Apply dynamic title if present in sheet
   const titleEl    = document.getElementById("title");
   const subtitleEl = document.getElementById("subtitle");
-  if (metaTitle && metaTitle.label) {
+  // Prefer menu sheet title/subtitle over meta-nodes rows
+  if (apiMainTitle) {
+    titleEl.textContent = apiMainTitle.toUpperCase();
+  } else if (metaTitle && metaTitle.label) {
     titleEl.textContent = metaTitle.label.toUpperCase();
   }
-  // Apply dynamic subtitle if present in sheet
-  if (metaSubtitle && metaSubtitle.label) {
+  if (apiSubtitle) {
+    subtitleEl.textContent = apiSubtitle;
+  } else if (metaSubtitle && metaSubtitle.label) {
     subtitleEl.textContent = metaSubtitle.label;
   }
   // Reveal title and subtitle now that correct text is set
