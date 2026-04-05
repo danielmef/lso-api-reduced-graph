@@ -537,7 +537,7 @@
     const configCsv = await configResp.text();
     apiConfig = d3.csvParse(configCsv).filter(r => r.label && r.nodes_gid && r.links_gid);
     apiSelect.innerHTML = apiConfig.map(r =>
-      `<option value="${r.nodes_gid}|${r.links_gid}">${r.label}</option>`
+      `<option value="${r.links_gid}">${r.label}</option>`
     ).join("");
   } catch(e) {
     console.warn("Could not fetch API config:", e);
@@ -548,24 +548,23 @@
       { label: "Internet Access std139.1 v1.00",  nodes_gid: "1445882970", links_gid: "863539780"  },
     ];
     apiSelect.innerHTML = apiConfig.map(r =>
-      `<option value="${r.nodes_gid}|${r.links_gid}">${r.label}</option>`
+      `<option value="${r.links_gid}">${r.label}</option>`
     ).join("");
   }
 
   // Switch infographic when dropdown changes
   apiSelect.addEventListener("change", () => {
-    const [ng, lg] = apiSelect.value.split("|");
+    const lg = apiSelect.value;
     const url = new URL(window.location.href);
-    url.searchParams.set("nodes", ng);
     url.searchParams.set("links", lg);
+    url.searchParams.delete("nodes");
     window.location.href = url.toString();
   });
 
   // Set dropdown to current selection based on URL params
   const params     = new URLSearchParams(window.location.search);
-  const nodesGid   = params.get("nodes") || DEFAULT_NODES_GID;
   const linksGid   = params.get("links") || DEFAULT_LINKS_GID;
-  const matchOpt   = [...apiSelect.options].find(o => o.value === `${nodesGid}|${linksGid}`);
+  const matchOpt   = [...apiSelect.options].find(o => o.value === linksGid);
   if (matchOpt) matchOpt.selected = true;
   // Always use meta-nodes sheet; links tab determined by linksGid
   const NODES_URL  = META_NODES_URL;
@@ -573,7 +572,7 @@
 
   // Debug bar — shows active GIDs and data source
   const debugBar = document.getElementById("debug-bar");
-  debugBar.textContent = `nodes gid: ${nodesGid}  |  links gid: ${linksGid}`;
+  debugBar.textContent = `links gid: ${linksGid}`;
   debugBar.style.opacity = "1";
 
   // Nodes fetched live from Google Sheets
@@ -644,7 +643,7 @@ hub-buy,hub-sell`;
   }
 
   // Update debug bar with source info
-  debugBar.textContent = `nodes gid: ${nodesGid} [${nodes_source}]  |  links gid: ${linksGid} [${links_source}]`;
+  debugBar.textContent = `links gid: ${linksGid} [${links_source}] | nodes [${nodes_source}]`;
 
   /* ─────────────────────────────────────────────
      COLOR PALETTE
