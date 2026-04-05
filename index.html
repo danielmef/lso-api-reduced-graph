@@ -515,9 +515,18 @@
   // Use ?nodes=GID&links=GID in the browser URL to switch data sources
   // Example: index.html?nodes=111111&links=222222
   const BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQlTBuVO46kBAF0mRvNa949LeZT8KjqXdy1KnzkSGMmxp3eDLxO39NWqRyh4zaOOYHDdZoraia5gI7M/pub?single=true&output=csv";
-  const DEFAULT_NODES_GID = "234225689";
-  const DEFAULT_LINKS_GID = "1077047330";
+  const DEFAULT_NODES_GID = "1901457844"; // meta-nodes sheet
+  const DEFAULT_LINKS_GID = "1881293424";
+  const META_NODES_URL = BASE_URL + "&gid=1901457844";
   const CONFIG_URL = BASE_URL + "&gid=399938948";
+
+  // Map links_gid → meta-nodes column header
+  const LINKS_GID_TO_COL = {
+    "1881293424": "lso.av2",
+    "1279159249": "lso.poq2",
+    "2008560393": "lso.q4",
+    "930832971":  "lso.po5",
+  };
 
   // Fetch config tab and populate dropdown
   const apiSelect = document.getElementById("api-select");
@@ -558,7 +567,8 @@
   const linksGid   = params.get("links") || DEFAULT_LINKS_GID;
   const matchOpt   = [...apiSelect.options].find(o => o.value === `${nodesGid}|${linksGid}`);
   if (matchOpt) matchOpt.selected = true;
-  const NODES_URL  = BASE_URL + "&gid=" + nodesGid;
+  // Always use meta-nodes sheet; links tab determined by linksGid
+  const NODES_URL  = META_NODES_URL;
   const LINKS_URL  = BASE_URL + "&gid=" + linksGid;
 
   // Debug bar — shows active GIDs and data source
@@ -662,7 +672,17 @@ hub-buy,hub-sell`;
   // Extract meta rows before rendering
   const metaTitle    = allRows.find(d => d.id === "meta-title");
   const metaSubtitle = allRows.find(d => d.id === "meta-subtitle");
-  const nodes = allRows.filter(d => d.type !== "meta");
+
+  // Determine API column to filter on based on linksGid
+  const apiCol = LINKS_GID_TO_COL[linksGid] || null;
+  console.log("API column filter:", apiCol, "for linksGid:", linksGid);
+
+  const nodes = allRows.filter(d => {
+    if (d.type === "meta") return false;   // exclude meta rows
+    if (d.type === "hub")  return true;    // always include hub nodes
+    if (!apiCol)           return true;    // no filter if column unknown
+    return d[apiCol] && d[apiCol].toLowerCase() === "yes";
+  });
   const links = d3.csvParse(links_csv);
 
   // Apply dynamic title if present in sheet
