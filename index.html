@@ -342,13 +342,12 @@
 
     /* Zoom slider */
     #zoom-wrap {
-      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
-      z-index: 10; display: flex; align-items: center; gap: 10px;
+      display: flex; align-items: center; gap: 10px;
       background: rgba(10,18,40,0.75);
       border: 1px solid rgba(255,255,255,0.12);
       border-radius: 20px; padding: 6px 16px;
       backdrop-filter: blur(8px);
-      opacity: 0; animation: slideUp .7s ease 1s forwards;
+      width: 220px;
     }
     #zoom-wrap label {
       font-size: 11px; color: var(--muted); white-space: nowrap;
@@ -416,11 +415,6 @@
 
   <div id="stats"></div>
   <div id="legend"></div>
-  <div id="zoom-wrap">
-    <label>&#128269;</label>
-    <input id="zoom-slider" type="range" min="0.2" max="3" step="0.05" value="0.8" />
-    <span id="zoom-label">80%</span>
-  </div>
   <div id="hint">Drag · Scroll to zoom · Click pinned node to release</div>
 
   <div id="logo">
@@ -808,6 +802,17 @@ hub-buy,hub-sell`;
   const initX = (W - W * initScale) / 2;
   const initY = (H - H * initScale) / 2;
   g.attr("transform", `translate(${initX},${initY}) scale(${initScale})`);
+
+  // Zoom slider as SVG foreignObject — positioned dynamically below hub link midpoint
+  const zoomFO = g.append("foreignObject")
+    .attr("width", 220).attr("height", 44)
+    .attr("x", W/2 - 110).attr("y", H/2 + 80)
+    .style("overflow", "visible");
+  zoomFO.append("xhtml:div")
+    .attr("id", "zoom-wrap")
+    .html('<label style="font-size:11px;color:rgba(232,237,245,0.45)">&#128269;</label>'
+        + '<input id="zoom-slider" type="range" min="0.2" max="3" step="0.05" value="0.8" style="width:120px" />'
+        + '<span id="zoom-label" style="font-size:11px;color:rgba(232,237,245,0.45);min-width:34px">80%</span>');
 
   const zoomBehavior = d3.zoom().scaleExtent([0.2, 5])
     .on("zoom", e => {
@@ -1228,6 +1233,8 @@ hub-buy,hub-sell`;
         const mx = (d.source.x + d.target.x) / 2;
         const my = (d.source.y + d.target.y) / 2;
         hubLinkLabel.attr("x", mx).attr("y", my - 10);
+        // Position zoom slider below midpoint of hub link
+        zoomFO.attr("x", mx - 110).attr("y", my + 20);
       }
     });
     nodeSel.attr("transform", d => `translate(${d.x},${d.y})`);
