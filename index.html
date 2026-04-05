@@ -817,8 +817,8 @@ hub-buy,hub-sell`;
 
   // Initial 20% zoom-out: centre the view at 0.8 scale
   const initScale = 0.4;
-  const initX = (W - W * initScale) / 2;
-  const initY = (H - H * initScale) / 2 + 80; // +80px offset to clear header
+  const initX = (W - W * initScale) / 2 + 80; // +80px offset to clear left panel
+  const initY = (H - H * initScale) / 2 + 130; // +130px offset to clear header
   g.attr("transform", `translate(${initX},${initY}) scale(${initScale})`);
 
   const zoomBehavior = d3.zoom().scaleExtent([0.2, 5])
