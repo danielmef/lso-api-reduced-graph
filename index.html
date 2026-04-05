@@ -429,8 +429,8 @@
     <div class="zoom-title">Infographic zoom</div>
     <div class="zoom-row">
       <label style="font-size:11px;color:var(--muted)">&#128269;</label>
-      <input id="zoom-slider" type="range" min="0.2" max="3" step="0.05" value="0.8" />
-      <span id="zoom-label">80%</span>
+      <input id="zoom-slider" type="range" min="0.2" max="3" step="0.05" value="0.4" />
+      <span id="zoom-label">40%</span>
     </div>
   </div>
   <div id="hint">Drag · Scroll to zoom · Click pinned node to release</div>
@@ -816,7 +816,7 @@ hub-buy,hub-sell`;
   const g = svg.append("g");
 
   // Initial 20% zoom-out: centre the view at 0.8 scale
-  const initScale = 0.8;
+  const initScale = 0.4;
   const initX = (W - W * initScale) / 2;
   const initY = (H - H * initScale) / 2;
   g.attr("transform", `translate(${initX},${initY}) scale(${initScale})`);
