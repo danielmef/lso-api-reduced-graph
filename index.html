@@ -853,10 +853,8 @@ hub-buy,hub-sell`;
   const startScale = 0.3;
   const startX = (W - W * startScale) / 2 + 260;
   const startY = (H - H * startScale) / 2 - 50;
-  g.attr("transform", `translate(${startX},${startY}) scale(${startScale})`);
   const startTransform = d3.zoomIdentity.translate(startX, startY).scale(startScale);
   const endTransform   = d3.zoomIdentity.translate(initX, initY).scale(initScale);
-  svg.call(zoomBehavior.transform, startTransform);
 
   const zoomBehavior = d3.zoom().scaleExtent([0.2, 5])
     .on("zoom", e => {
@@ -870,6 +868,7 @@ hub-buy,hub-sell`;
       if (label)  label.textContent = Math.round(s * 100) + "%";
     });
   svg.call(zoomBehavior);
+  svg.call(zoomBehavior.transform, startTransform);
 
   // Animate zoom from 30% to 50% over 2 seconds on load
   setTimeout(() => {
