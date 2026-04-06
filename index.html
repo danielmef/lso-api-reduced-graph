@@ -256,13 +256,14 @@
 
     /* API Dropdown */
     #api-dropdown-wrap {
-      position: fixed; top: 375px; left: 32px;
+      position: fixed; top: calc(50% + 55px); left: 32px;
       z-index: 10;
-      display: flex; align-items: center; gap: 12px;
+      display: flex; align-items: flex-end; gap: 12px;
       opacity: 0; animation: slideDown .7s ease .6s forwards;
     }
     #lso-versions-img {
       height: 144px; width: auto;
+      margin-top: 35px;
       border-radius: 4px;
       cursor: zoom-in;
       transition: transform .15s, box-shadow .15s;
