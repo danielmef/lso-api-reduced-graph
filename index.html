@@ -496,7 +496,7 @@
   </div>
 
   <div id="debug-bar"></div>
-  <div id="info-box">This infographic shows the automated interoperability between companies on the buy and sell side based on the selected item in the dropdown. The data is continuously being updated. If you want to update your company's API status or add new API status data, please fill in the form below by clicking the '+Share my API status' button. For more information, please contact <a id="info-email" href="#"></a></div>
+  <div id="info-box">This infographic shows the automation interoperability between companies on the buy and sell side based on the selected item in the dropdown. The data is continuously being updated. If you want to update your company's API status or add new API status data, please fill in the form below by clicking the '+Share my API status' button. For more information, please contact <a id="info-email" href="#"></a></div>
   <svg id="graph"></svg>
   <div id="tooltip">
     <div class="tip-name"></div>
@@ -848,7 +848,15 @@ hub-buy,hub-sell`;
   const initScale = 0.5;
   const initX = (W - W * initScale) / 2 + 260; // +260px offset to clear left panel
   const initY = (H - H * initScale) / 2 - 50;  // -50px offset to move up
-  g.attr("transform", `translate(${initX},${initY}) scale(${initScale})`);
+
+  // Start at 30% zoom then animate to 50% over 2 seconds
+  const startScale = 0.3;
+  const startX = (W - W * startScale) / 2 + 260;
+  const startY = (H - H * startScale) / 2 - 50;
+  g.attr("transform", `translate(${startX},${startY}) scale(${startScale})`);
+  const startTransform = d3.zoomIdentity.translate(startX, startY).scale(startScale);
+  const endTransform   = d3.zoomIdentity.translate(initX, initY).scale(initScale);
+  svg.call(zoomBehavior.transform, startTransform);
 
   const zoomBehavior = d3.zoom().scaleExtent([0.2, 5])
     .on("zoom", e => {
@@ -862,6 +870,12 @@ hub-buy,hub-sell`;
       if (label)  label.textContent = Math.round(s * 100) + "%";
     });
   svg.call(zoomBehavior);
+
+  // Animate zoom from 30% to 50% over 2 seconds on load
+  setTimeout(() => {
+    svg.transition().duration(2000).ease(d3.easeCubicInOut)
+      .call(zoomBehavior.transform, endTransform);
+  }, 600);
 
   // Wire up slider to control zoom
   document.getElementById("zoom-slider").addEventListener("input", function() {
