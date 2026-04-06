@@ -515,11 +515,52 @@
   // ── URL parameter support ──────────────────────────────────────────
   // Use ?nodes=GID&links=GID in the browser URL to switch data sources
   // Example: index.html?nodes=111111&links=222222
-  const BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQlTBuVO46kBAF0mRvNa949LeZT8KjqXdy1KnzkSGMmxp3eDLxO39NWqRyh4zaOOYHDdZoraia5gI7M/pub?single=true&output=csv";
-  const DEFAULT_NODES_GID = "1901457844"; // meta-nodes sheet
+  // Google Sheets API v4 — key restricted to danielmef.github.io
+  const SHEET_ID   = "1xY0ZnweIXE3pDPyTfiT3nsvB7wCchLZIW5D6jAOFzuQ";
+  const API_KEY    = "AIzaSyCiYRPbPg2u3SlYm6CxcdgQDHn1yGM4rNs";
+  const API_BASE   = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values`;
   const DEFAULT_LINKS_GID = "1881293424";
-  const META_NODES_URL = BASE_URL + "&gid=1901457844";
-  const CONFIG_URL = BASE_URL + "&gid=399938948";
+
+  // Map GID → sheet name for Sheets API
+  const GID_TO_NAME = {
+    "399938948":  "menu",
+    "1901457844": "meta-nodes",
+    "1881293424": "lso.av2.links",
+    "1279159249": "lso.poq2.links",
+    "2008560393": "lso.q4.links",
+    "930832971":  "lso.po5.links",
+    "2067951233": "form",
+  };
+
+  // Fetch a sheet by GID and return CSV-like parsed array of objects
+  async function fetchSheet(gid) {
+    const name = GID_TO_NAME[gid];
+    if (!name) throw new Error("Unknown GID: " + gid);
+    const url = `${API_BASE}/${encodeURIComponent(name)}?key=${API_KEY}`;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    const json = await resp.json();
+    const rows = json.values || [];
+    if (rows.length < 2) return [];
+    const headers = rows[0].map(h => h.trim());
+    return rows.slice(1).map(row => {
+      const obj = {};
+      headers.forEach((h, i) => obj[h] = row[i] || "");
+      return obj;
+    });
+  }
+
+  // Convert array of objects to CSV string (for d3.csvParse compatibility)
+  function toCsv(rows) {
+    if (!rows.length) return "";
+    const headers = Object.keys(rows[0]);
+    const lines = [headers.join(",")];
+    rows.forEach(r => lines.push(headers.map(h => JSON.stringify(r[h] || "")).join(",")));
+    return lines.join("\n");
+  }
+
+  const CONFIG_GID      = "399938948";
+  const META_NODES_GID  = "1901457844";
 
   // Map links_gid → meta-nodes column header
   const LINKS_GID_TO_COL = {
@@ -533,10 +574,7 @@
   const apiSelect = document.getElementById("api-select");
   let apiConfig = [];
   try {
-    const configResp = await fetch(CONFIG_URL + "&t=" + Date.now());
-    if (!configResp.ok) throw new Error("HTTP " + configResp.status);
-    const configCsv = await configResp.text();
-    apiConfig = d3.csvParse(configCsv).filter(r => r.label && r.nodes_gid && r.links_gid);
+    apiConfig = (await fetchSheet(CONFIG_GID)).filter(r => r.label && r.links_gid);
     apiSelect.innerHTML = apiConfig.map(r =>
       `<option value="${r.links_gid}">${r.label}</option>`
     ).join("");
@@ -567,24 +605,20 @@
   const linksGid   = params.get("links") || DEFAULT_LINKS_GID;
   const matchOpt   = [...apiSelect.options].find(o => o.value === linksGid);
   if (matchOpt) matchOpt.selected = true;
-  // Always use meta-nodes sheet; links tab determined by linksGid
-  const NODES_URL  = META_NODES_URL;
-  const LINKS_URL  = BASE_URL + "&gid=" + linksGid;
 
   // Debug bar — shows active GIDs and data source
   const debugBar = document.getElementById("debug-bar");
   debugBar.textContent = `links gid: ${linksGid}`;
   debugBar.style.opacity = "1";
 
-  // Nodes fetched live from Google Sheets
+  // Nodes fetched via Sheets API
   let nodes_csv, nodes_source = "live";
   try {
-    const resp = await fetch(NODES_URL + "&t=" + Date.now());
-    if (!resp.ok) throw new Error("HTTP " + resp.status);
-    nodes_csv = await resp.text();
+    const nodesRows = await fetchSheet(META_NODES_GID);
+    nodes_csv = toCsv(nodesRows);
   } catch(e) {
     nodes_source = "fallback";
-    console.warn("Could not fetch nodes from Google Sheets:", e);
+    console.warn("Could not fetch nodes:", e);
     // Fallback to last known data
     nodes_csv = `id,label,type,group,importance,url,region,glf,solution provider
 hub-buy,Buy side,hub,buy,,,,,
@@ -610,15 +644,14 @@ transunion-buy,Transunion,company,buy,low,,,,yes
 transunion-sell,Transunion,company,sell,low,,,,yes`;
   }
 
-  // Links fetched live from Google Sheets
+  // Links fetched via Sheets API
   let links_csv, links_source = "live";
   try {
-    const resp = await fetch(LINKS_URL + "&t=" + Date.now());
-    if (!resp.ok) throw new Error("HTTP " + resp.status);
-    links_csv = await resp.text();
+    const linksRows = await fetchSheet(linksGid);
+    links_csv = toCsv(linksRows);
   } catch(e) {
     links_source = "fallback";
-    console.warn("Could not fetch links from Google Sheets:", e);
+    console.warn("Could not fetch links:", e);
     // Fallback to last known data
     links_csv = `source,target
 amartus-buy,hub-buy
@@ -1311,16 +1344,12 @@ hub-buy,hub-sell`;
   // ── Implementation Survey ────────────────────────────────────────────────
   (async function() {
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxG0hoPlzmHYha6Sdoqka8TZKvJhwTQuVYglEhLWa0QathRTTauIksKSRKHOZbLFOAN_w/exec";
-    const FORM_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQlTBuVO46kBAF0mRvNa949LeZT8KjqXdy1KnzkSGMmxp3eDLxO39NWqRyh4zaOOYHDdZoraia5gI7M/pub?gid=2067951233&single=true&output=csv";
-
-    // Fetch form options from sheet, fallback to menu options
+    // Fetch form options via Sheets API
     const tbody = document.getElementById("impl-tbody");
     let formLabels = [];
     try {
-      const resp = await fetch(FORM_URL + "&t=" + Date.now());
-      if (!resp.ok) throw new Error("HTTP " + resp.status);
-      const csv = await resp.text();
-      formLabels = d3.csvParse(csv).filter(r => r.label).map(r => r.label);
+      const formRows = await fetchSheet("2067951233");
+      formLabels = formRows.filter(r => r.label).map(r => r.label);
     } catch(e) {
       console.warn("Form fetch failed, using fallback:", e);
       formLabels = [
